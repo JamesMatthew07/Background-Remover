@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Background Remover</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+
+    <style>
+        * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f7f7f7;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    height: 100vh;
+    margin-bottom: 80px; 
+}
+
+.container {
+    text-align: center;
+    width: 80%;
+    max-width: 600px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    padding: 40px;
+    margin-bottom: 20px;
+}
+
+h1 {
+    color: #333;
+    margin-bottom: 20px;
+}
+
+.upload-section {
+    margin-bottom: 20px;
+}
+
+input[type="file"] {
+    display: none;
+}
+
+label {
+    display: inline-block;
+    background-color: #007bff;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+label:hover {
+    background-color: #0056b3;
+}
+
+button, .btn {
+    background-color: #007bff;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    margin-top: 10px;
+}
+
+button:hover, .btn:hover {
+    background-color: #0056b3;
+}
+
+.preview-section {
+    margin-top: 20px;
+}
+
+.image-preview {
+    max-width: 100%;
+    height: auto;
+    margin-top: 10px;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+#outputSection {
+    display: none;
+}
+
+#removeBtn:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+}
+
+.dlButton {
+    text-decoration: none; 
+    display: inline-block; 
+    background-color: #007bff;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 5px;
+    font-size: 16px;
+    cursor: pointer;
+    text-align: center;
+}
+
+.dlButton:hover {
+    background-color: #0056b3;
+}
+
+
+footer {
+    padding: 10px 0;
+    text-align: center;
+    position: relative;
+    width: 100%;
+    bottom: 0;
+}
+
+footer p {
+    color: #333;
+    font-size: 14px;
+    margin: 0;
+}
+
+
+.social-icons {
+    margin-top: 10px;
+}
+
+.social-icon {
+    color: #333;
+    font-size: 24px;
+    margin: 0 10px;
+    text-decoration: none;
+}
+
+.social-icon:hover {
+    color: #007bff; 
+}
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Background Remover</h1>
+        <div class="upload-section">
+            <label for="fileInput" class="btn">Upload Image</label>
+            <input type="file" id="fileInput" accept="image/*" onchange="previewImage(event)">
+        </div>
+        <div id="imagePreviewSection" class="preview-section" style="display:none;">
+            <h3>Uploaded Image:</h3>
+            <img id="uploadedImage" src="" alt="Uploaded Image" class="image-preview">
+        </div>
+        <div class="remove-bg-section" style="display:none;">
+            <button id="removeBtn" class="btn" onclick="uploadImage()" disabled>Remove Background</button>
+        </div>
+        <div id="outputSection" class="preview-section" style="display:none;">
+            <h3>Processed Image:</h3>
+            <img id="outputImage" src="" alt="Processed Image" class="image-preview">
+            <a id="downloadLink" download="output.png" class="btn dlButton">Download Image</a>
+        </div>
+    </div>
+    <footer>
+        <p>&copy; 2024 Background Remover. All rights reserved.</p>
+        <div class="social-icons">
+            <a href="https://www.linkedin.com/in/jamesmatthewdev" target="_blank" class="social-icon"><i class="fab fa-linkedin"></i></a>
+            <a href="https://www.facebook.com/jamesmatthew.llanos/" target="_blank" class="social-icon"><i class="fab fa-facebook"></i></a>
+            <a href="https://github.com/JamesMatthew07" target="_blank" class="social-icon"><i class="fab fa-github"></i></a>
+        </div>
+    </footer>
+
+    <script>
+        function previewImage(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('uploadedImage').src = e.target.result;
+                    document.getElementById('imagePreviewSection').style.display = 'block';
+                    document.getElementById('removeBtn').disabled = false; // Enable Remove Background button
+                    document.getElementById('removeBtn').innerText = 'Remove Background';
+                    document.querySelector('.remove-bg-section').style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function uploadImage() {
+            const fileInput = document.getElementById('fileInput');
+            const formData = new FormData();
+            formData.append('image', fileInput.files[0]);
+
+            document.getElementById('removeBtn').innerText = 'Processing...';
+            document.getElementById('removeBtn').disabled = true;
+
+            fetch('/remove-bg', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.blob())
+            .then(data => {
+                const url = URL.createObjectURL(data);
+                document.getElementById('outputImage').src = url;
+                document.getElementById('downloadLink').href = url;
+                document.getElementById('outputSection').style.display = 'block';
+                document.getElementById('removeBtn').innerText = 'Remove Background';
+                document.getElementById('removeBtn').disabled = false;
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error processing the image.');
+                document.getElementById('removeBtn').innerText = 'Try Again';
+                document.getElementById('removeBtn').disabled = false;
+            });
+        }
+    </script>
+</body>
+</html>
